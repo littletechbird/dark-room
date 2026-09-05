@@ -81,7 +81,8 @@ python -m darkroom.cli --vault-dir /tmp/dr-demo fill-sim \
   --handle dr_sec_… --field password --form-file /tmp/fake_form.txt
 
 # Tests
-python -m pytest tests/ -q
+python -m pytest tests/ attacks/ -q
+python attacks/run_all.py
 # or: python -m unittest discover -s tests -v
 ```
 
@@ -90,12 +91,44 @@ Agent-oriented walkthrough: [examples/agent_flow.md](examples/agent_flow.md).
 ## Package layout
 
 ```
-darkroom/          vault, CLI, CaptureShield stub
-examples/          agent sees only handle
+darkroom/          vault, CLI, CaptureShield, modal stub, redact
+attacks/           red-team suite + scorecard (run_all.py)
+examples/          agent flow + red_team_protocol
 tests/             metadata secrecy, wrong handle, revoke
 SPEC.md            RFC-style design
 PROPOSAL.md        SendFeedback / Poteto-facing ask
-CAPTURE_NOTES.md   Win / macOS / Linux capture exclusion
+CAPTURE_NOTES.md   Win / macOS / Linux capture exclusion + redaction
+```
+
+
+## Attack suite
+
+Automated boundary + capture-architecture tests live under `attacks/`.
+
+```bash
+python attacks/run_all.py   # JSON scorecard; exit 0 if automated tests PASS
+```
+
+| Check | Expected |
+| --- | --- |
+| Vault unit + file-exfil boundary | **PASS** — canary never in metadata/audit/store |
+| Redaction simulation | **PASS** — canary pattern blacked out via `darkroom.redact` |
+| Live screenshot on Linux (manual) | **FAIL / leak** without OS shield — documents why host integration matters |
+
+Details: [attacks/ATTACKS.md](attacks/ATTACKS.md). Tester bot playbook: [examples/red_team_protocol.md](examples/red_team_protocol.md).
+
+### Modal stub (drag / resize)
+
+```bash
+python -m darkroom.modal_stub --canary --vault-dir /tmp/dr-demo
+# geometry published to /tmp/darkroom-geometry.json
+# Mint handle → opaque dr_sec_… only (secret never printed)
+```
+
+### Host redaction helper
+
+```bash
+python -m darkroom.redact /tmp/shot.png -g /tmp/darkroom-geometry.json -o /tmp/shot-redacted.png
 ```
 
 ## License

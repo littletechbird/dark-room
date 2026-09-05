@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dark-room"
-version = "0.1.0"
+version = "0.2.0"
 description = "Inverse sandbox for agent-watched desktops — opaque secret handles"
 readme = "README.md"
 license = { text = "MIT" }
@@ -12,6 +12,7 @@ requires-python = ">=3.10"
 authors = [{ name = "Brent Spink" }]
 dependencies = [
   "cryptography>=42.0.0",
+  "Pillow>=10.0.0",
 ]
 
 [project.optional-dependencies]
@@ -24,4 +25,4 @@ darkroom = "darkroom.cli:main"
 include = ["darkroom*"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "attacks"]

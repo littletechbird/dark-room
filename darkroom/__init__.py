@@ -6,7 +6,7 @@ tool logs, or agent reasoning). Agents may only see opaque handles
 of the form ``dr_sec_<id>``.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __all__ = ["Vault", "CaptureShield"]
 
 from darkroom.vault import Vault

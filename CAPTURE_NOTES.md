@@ -145,6 +145,51 @@ Platform modules:
 - Linux: record compositor name + whether exclusion is available; degrade
   gracefully to handle-only protocol.
 
+
+
+## Modal geometry + host redaction pipeline
+
+The Tkinter stub (`darkroom.modal_stub`) writes:
+
+```json
+{"x": 120, "y": 120, "w": 480, "h": 280}
+```
+
+to `/tmp/darkroom-geometry.json` (override with `DARKROOM_GEOMETRY_PATH`) on every
+move/resize. A host agent runtime SHOULD:
+
+1. Grab the desktop frame as usual.
+2. Read the geometry file (if present and fresh).
+3. Run `darkroom.redact.redact_file(shot, geometry, out)` — black rectangle.
+4. Only then hand the frame to vision / OCR / model tools.
+
+CLI:
+
+```bash
+python -m darkroom.redact /tmp/shot.png -g /tmp/darkroom-geometry.json -o /tmp/shot-redacted.png
+```
+
+### Drag / resize / always-on-top
+
+| Behavior | Stub | Production |
+| --- | --- | --- |
+| Drag via title bar | yes | yes |
+| Resize via window edges | yes (Tk) | yes |
+| Always-on-top | default on (`--no-topmost` to disable) | optional policy |
+| OS exclude-from-capture | **no** (Linux no-op) | required where available |
+| Geometry publish | yes | yes (or privileged IPC) |
+
+### Residual risks (redaction path)
+
+- Stale geometry if the window moves between capture and redact.
+- Multi-monitor / HiDPI coordinate mismatches.
+- Compositor shadows / animations outside the reported HWND bounds.
+- Attacker reading the secret via non-screenshot channels (argv, a11y, files).
+
+Redaction is **defense-in-depth**, not a substitute for OS exclusion when the
+OS provides it. On Linux CI boxes, expect **raw screenshot FAIL** and
+**redaction sim PASS** — see `attacks/ATTACKS.md`.
+
 ## Summary
 
 | OS | Prototype | Production path |

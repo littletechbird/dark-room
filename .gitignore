@@ -36,3 +36,8 @@ Thumbs.db
 # Env
 .env
 .env.*
+
+# Attack / modal runtime artifacts
+/tmp-darkroom-*
+attacks/_artifacts/
+*.redacted.png

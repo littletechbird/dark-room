@@ -47,6 +47,7 @@ We need a **primitive**: the agent can say “use credential X on origin Y” wi
 - G4: Origin allowlists to reduce confused-deputy / wrong-form fills.
 - G5: Audit mint/resolve/revoke without logging plaintext.
 - G6: Clear OS integration path for exclude-from-capture (Win/macOS/Linux).
+- G7: Draggable/resizable Dark Room modal + host redaction fallback when OS shield absent.
 
 ### Non-goals
 
@@ -242,8 +243,38 @@ Details and stub interface: [CAPTURE_NOTES.md](CAPTURE_NOTES.md).
 | Vault mint/resolve/revoke/list | `darkroom/vault.py` |
 | CLI | `darkroom/cli.py` |
 | CaptureShield stub | `darkroom/capture.py` |
+| Draggable/resizable modal stub | `darkroom/modal_stub.py` |
+| Host redaction (geometry → blackout) | `darkroom/redact.py` |
 | Agent narrative | `examples/agent_flow.md` |
-| Tests | `tests/test_vault.py` |
+| Red-team protocol | `examples/red_team_protocol.md` |
+| Vault tests | `tests/test_vault.py` |
+| Attack / capture suite | `attacks/` |
+
+---
+
+## 12.1 Modal UI requirements (stub + production)
+
+The Dark Room surface MUST:
+
+- Be **draggable** (custom title bar or equivalent) and **resizable**.
+- Optionally stay **always-on-top** while open.
+- Allow the human to enter / view a **demo secret** (text; image placeholder OK).
+- Stay “inside” for the user (normal desktop window) while remaining out of agent vision channels.
+- Publish **geometry** `{x,y,w,h}` to a host-readable status file (prototype: `/tmp/darkroom-geometry.json`) on move/resize for redaction pipelines.
+- Expose **Mint handle** that calls the vault; show only `dr_sec_…` — never print plaintext to stdout or window titles.
+
+Production MUST additionally bind **CaptureShield** (OS exclude-from-capture). Linux hosts without a compositor shield MUST run **frame redaction** using published geometry before any model sees pixels.
+
+## 12.2 Capture exclusion + residual risks
+
+| Layer | Requirement | Residual risk |
+| --- | --- | --- |
+| OS exclude-from-capture | Win `WDA_EXCLUDEFROMCAPTURE`; macOS strongest available sharing flags; Linux compositor-specific | Kernel/driver capture; macOS SCK bypasses |
+| Host redaction pipeline | Black out modal bounds from geometry JSON before vision/OCR | Wrong/stale geometry; multi-monitor coords; race before update |
+| Vault handle boundary | Agents only receive handles; no resolve to transcripts | User/tester misuse; post-fill DOM scrape |
+| Geometry status file | Bounds only — not secret | Reveals that a Dark Room is open and where |
+
+Honest test policy: on Linux **without** OS shield, a raw screenshot attack is expected to **FAIL** (leak). The simulated redaction suite MUST **PASS**. See `attacks/ATTACKS.md`.
 
 ---
 
@@ -255,4 +286,5 @@ This is a **reference/prototype**. Report design issues via the repository issue
 
 ## 14. Changelog
 
+- **0.2.0** — Modal stub (drag/resize), host redaction helper, attack suite + honest Linux capture notes.
 - **0.1.0** — Initial public reference SPEC + Python prototype.
