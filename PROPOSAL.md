@@ -1,8 +1,8 @@
 # Proposal: Dark Room for agent-watched desktops
 
-**From:** Brent Spink (@littletechbird)  
+**From:** @littletechbird  
 **To:** Cursor / Grok Bot creators (SendFeedback, Poteto-facing)  
-**Repo concept:** `dark-room` — inverse sandbox for agent-watched desktops  
+**Repo:** https://github.com/littletechbird/dark-room  
 **Status:** public reference + working local prototype (not production)
 
 ## Five bullets
@@ -23,4 +23,4 @@ Please review [SPEC.md](SPEC.md) and the runnable prototype (`python -m darkroom
 
 We are **not** asking to ship this Python spike as-is. We are asking to treat Dark Room as a named product/RFC direction and to green-light a deeper prototype inside the real agent stack.
 
-Contact / attribution: Brent Spink — GitHub @littletechbird.
+Contact / attribution: GitHub @littletechbird.
