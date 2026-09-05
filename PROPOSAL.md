@@ -8,7 +8,7 @@
 ## Five bullets
 
 1. **Problem.** Desktop agents that screenshot and drive UI inevitably ingest secrets typed or pasted into the watched session. Once a key is in model context, revoke is theater.
-2. **Idea.** A host-OS **Dark Room** modal excluded from AI capture/input channels, plus a **local vault** that mints opaque handles (`dr_sec_<id>`). Agents orchestrate with handles; a local resolver expands plaintext only at fill/submit/egress.
+2. **Idea.** A host-OS **Dark Room** modal excluded from AI capture/input channels (**modal window only** — e.g. Electron `setContentProtection(true)`, not a global screenshot kill), plus a **local vault** that mints opaque handles (`dr_sec_<id>`). Agents orchestrate with handles; a local resolver expands plaintext only at fill/submit/egress. Host redaction is defense-in-depth.
 3. **Prior art.** Stripe Elements, passkeys, Windows `WDA_EXCLUDEFROMCAPTURE`, macOS Secure Event Input, Cursor Runtime Secrets, Infisical-style brokering — Dark Room composes these patterns for *agent* threat models.
 4. **Threats we call out.** Post-fill DOM leakage, length/timing side channels, ScreenCaptureKit bypasses, wrong-origin handle use. The SPEC documents these; the prototype proves the handle/metadata boundary.
 5. **Ask.** Adopt (or co-design) a Dark Room / Agent Elements primitive in the agent runtime: capture-excluded secret entry, handle-only agent APIs, audited resolve-at-egress, origin allowlists.
@@ -19,7 +19,7 @@ Please review [SPEC.md](SPEC.md) and the runnable prototype (`python -m darkroom
 
 - Design feedback from Cursor Runtime / secrets owners
 - A path to pilot **handle-only** credentials in agent tool APIs
-- Guidance on first-class OS capture exclusion in the desktop agent host
+- Guidance on first-class OS capture exclusion for the Dark Room window only (Electron `setContentProtection` / `WDA_EXCLUDEFROMCAPTURE`)
 
 We are **not** asking to ship this Python spike as-is. We are asking to treat Dark Room as a named product/RFC direction and to green-light a deeper prototype inside the real agent stack.
 

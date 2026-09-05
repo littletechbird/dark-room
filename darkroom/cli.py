@@ -180,7 +180,7 @@ def build_parser() -> argparse.ArgumentParser:
     rev.add_argument("--handle", "-H", required=True)
     rev.set_defaults(func=cmd_revoke)
 
-    sh = sub.add_parser("shield-status", help="CaptureShield stub status")
+    sh = sub.add_parser("shield-status", help="CaptureShield OS-exclude status")
     sh.set_defaults(func=cmd_shield_status)
 
     return p

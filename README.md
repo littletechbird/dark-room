@@ -50,7 +50,7 @@ Prior art we draw on: Stripe Elements, WebAuthn/passkeys, Windows `WDA_EXCLUDEFR
 
 **In scope (prototype + SPEC):** agent-visible screenshots and tool transcripts; accidental argv leakage; metadata APIs leaking plaintext; revoke; origin allowlists.
 
-**Partially addressed:** OS exclude-from-capture (stubbed; see CAPTURE_NOTES.md); audit trail.
+**Partially addressed:** OS exclude-from-capture — Win/macOS bindings wired; Linux UNAVAILABLE (use Electron `setContentProtection` on modal only; see CAPTURE_NOTES.md); audit trail.
 
 **Out of scope / known gaps:** post-fill DOM scrapers; sophisticated length/timing channels; macOS ScreenCaptureKit bypasses; malware with disk key access; multi-user shared hosts; production key management (HSM/KMS).
 
@@ -93,11 +93,11 @@ Agent-oriented walkthrough: [examples/agent_flow.md](examples/agent_flow.md).
 ```
 darkroom/          vault, CLI, CaptureShield, modal stub, redact
 attacks/           red-team suite + scorecard (run_all.py)
-examples/          agent flow + red_team_protocol
+examples/          agent flow + red_team_protocol + electron-host-sketch
 tests/             metadata secrecy, wrong handle, revoke
 SPEC.md            RFC-style design
 PROPOSAL.md        SendFeedback / Poteto-facing ask
-CAPTURE_NOTES.md   Win / macOS / Linux capture exclusion + redaction
+CAPTURE_NOTES.md   Win / macOS / Linux OS exclude (modal only) + redaction
 ```
 
 
@@ -113,17 +113,21 @@ python attacks/run_all.py   # JSON scorecard; exit 0 if automated tests PASS
 | --- | --- |
 | Vault unit + file-exfil boundary | **PASS** — canary never in metadata/audit/store |
 | Redaction simulation | **PASS** — canary pattern blacked out via `darkroom.redact` |
-| Live screenshot on Linux (manual) | **FAIL / leak** without OS shield — documents why host integration matters |
+| Live screenshot on Linux (manual) | **FAIL / leak** — OS exclude UNAVAILABLE; use Electron `setContentProtection` + redaction |
 
 Details: [attacks/ATTACKS.md](attacks/ATTACKS.md). Tester bot playbook: [examples/red_team_protocol.md](examples/red_team_protocol.md).
 
-### Modal stub (drag / resize)
+### Modal stub (drag / resize + OS exclude status)
 
 ```bash
 python -m darkroom.modal_stub --canary --vault-dir /tmp/dr-demo
 # geometry published to /tmp/darkroom-geometry.json
+# UI shows OS exclude: ENGAGED | UNAVAILABLE (…)
 # Mint handle → opaque dr_sec_… only (secret never printed)
+python -m darkroom.cli shield-status
 ```
+
+**Product decision:** OS exclude of the Dark Room **modal window only** (not global screenshot kill). Redaction is defense-in-depth. Host sketch: [examples/electron-host-sketch.md](examples/electron-host-sketch.md).
 
 ### Host redaction helper
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dark-room"
-version = "0.2.0"
+version = "0.3.0"
 description = "Inverse sandbox for agent-watched desktops — opaque secret handles"
 readme = "README.md"
 license = { text = "MIT" }

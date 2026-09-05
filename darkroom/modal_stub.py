@@ -9,9 +9,10 @@ Geometry ``{x,y,w,h}`` is written to ``/tmp/darkroom-geometry.json`` on
 move/resize so a host redaction pipeline (see ``darkroom.redact``) can
 black out the modal before frames reach a model.
 
-This stub does NOT implement OS exclude-from-capture. On Linux a live
-screenshot WILL see the modal contents — that is intentional and is
-exercised by the attack suite. See CAPTURE_NOTES.md.
+On map/visible, ``CaptureShield.enter`` attempts real OS exclude-from-capture
+(Windows WDA_EXCLUDEFROMCAPTURE, macOS NSWindowSharingNone via pyobjc).
+On Linux the shield reports UNAVAILABLE — production hosts should use
+Electron ``setContentProtection(true)``. See CAPTURE_NOTES.md.
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ import tkinter as tk
 from pathlib import Path
 from typing import Optional
 
+from darkroom.capture import CaptureShield
 from darkroom.vault import Vault, VaultError
 
 GEOMETRY_PATH = Path(os.environ.get("DARKROOM_GEOMETRY_PATH", "/tmp/darkroom-geometry.json"))
@@ -38,6 +40,7 @@ FG_DIM = "#8a8a96"
 ACCENT = "#5b8cff"
 ENTRY_BG = "#16161a"
 DANGER = "#ff6b6b"
+OK_GREEN = "#6bcb77"
 
 
 class DarkRoomModal:
@@ -57,13 +60,15 @@ class DarkRoomModal:
         self._drag_x = 0
         self._drag_y = 0
         self._handle_var: Optional[tk.StringVar] = None
+        self._shield = CaptureShield()
+        self._shield_engaged_once = False
 
         self.root = tk.Tk()
         self.root.title(title)
         # Window title intentionally does NOT contain the secret.
         self.root.configure(bg=BG)
-        self.root.geometry("480x280+120+120")
-        self.root.minsize(320, 200)
+        self.root.geometry("480x300+120+120")
+        self.root.minsize(320, 220)
         if always_on_top:
             self.root.attributes("-topmost", True)
 
@@ -72,8 +77,44 @@ class DarkRoomModal:
         self._build_ui(initial_secret=initial_secret)
         self.root.bind("<Configure>", self._on_configure)
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
-        # Initial geometry write
+        self.root.bind("<Map>", self._on_map)
+        # Initial geometry write + shield attempt after first map
         self.root.after(50, self._write_geometry)
+        self.root.after(100, self._engage_shield)
+
+    def _native_window_id(self) -> object:
+        """Best-effort native window id for CaptureShield (Tk root / HWND / XID)."""
+        # Pass the Tk root so Windows path can use wm_frame() + GetParent climb.
+        return self.root
+
+    def _os_exclude_status_text(self) -> str:
+        st = self._shield.status()
+        if st.get("engaged"):
+            return "OS exclude: ENGAGED"
+        sysname = (st.get("system") or "").lower()
+        if sysname == "linux" or not st.get("supported"):
+            return (
+                "OS exclude: UNAVAILABLE "
+                "(linux stub — use host Electron setContentProtection)"
+            )
+        note = st.get("note") or "unavailable"
+        return f"OS exclude: UNAVAILABLE ({note})"
+
+    def _engage_shield(self) -> None:
+        ok = self._shield.enter(self._native_window_id())
+        self._shield_engaged_once = bool(ok)
+        text = self._os_exclude_status_text()
+        self.os_exclude_var.set(text)
+        color = OK_GREEN if ok else FG_DIM
+        try:
+            self._os_exclude_lbl.configure(fg=color)
+        except tk.TclError:
+            pass
+
+    def _on_map(self, _event: tk.Event | None = None) -> None:  # type: ignore[type-arg]
+        # Re-engage when the window becomes visible (e.g. after iconify).
+        if not self._shield.engaged:
+            self.root.after(10, self._engage_shield)
 
     def _build_ui(self, *, initial_secret: str) -> None:
         title = tk.Frame(self.root, bg=BG_TITLE, height=36)
@@ -82,7 +123,7 @@ class DarkRoomModal:
 
         lbl = tk.Label(
             title,
-            text="  Dark Room  —  capture-excluded stub",
+            text="  Dark Room  —  OS exclude",
             bg=BG_TITLE,
             fg=FG,
             font=("Helvetica", 11, "bold"),
@@ -109,6 +150,19 @@ class DarkRoomModal:
 
         body = tk.Frame(self.root, bg=BG, padx=16, pady=12)
         body.pack(fill=tk.BOTH, expand=True)
+
+        self.os_exclude_var = tk.StringVar(value="OS exclude: …")
+        self._os_exclude_lbl = tk.Label(
+            body,
+            textvariable=self.os_exclude_var,
+            bg=BG,
+            fg=FG_DIM,
+            font=("Courier", 9, "bold"),
+            anchor="w",
+            justify=tk.LEFT,
+            wraplength=440,
+        )
+        self._os_exclude_lbl.pack(fill=tk.X, pady=(0, 8))
 
         hint = tk.Label(
             body,
@@ -264,6 +318,10 @@ class DarkRoomModal:
 
     def _on_close(self) -> None:
         self._write_geometry()
+        try:
+            self._shield.exit()
+        except Exception:
+            pass
         self.root.destroy()
 
     def run(self) -> None:

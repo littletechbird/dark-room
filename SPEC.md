@@ -174,13 +174,13 @@ Production upgrades (out of scope for spike): OS keychain/DPAPI for key wrap, pe
 
 ### 9.1 Windows
 
-- `SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)` for Dark Room HWND.
+- `SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)` for Dark Room HWND (wired in `CaptureShield` via ctypes; Tk HWND via `wm_frame`/`GetParent`).
 - Consider Secure Desktop for ultra-sensitive entry (UAC-like).
 - Affinity is not perfect against kernel or driver capture; document residual risk.
 
 ### 9.2 macOS
 
-- `NSWindow.sharingType = .none` historically reduced window sharing.
+- `NSWindow.sharingType = .none` (optional pyobjc in `CaptureShield`; prefer Electron `setContentProtection`).
 - **ScreenCaptureKit** and some system paths have bypassed older exclusions; treat as arms race — see CAPTURE_NOTES.md.
 - Secure Event Input for keystrokes (legacy Carbon / modern equivalents).
 - Prefer not relying on window exclusion alone; combine with never putting plaintext in agent pipes.
@@ -189,10 +189,17 @@ Production upgrades (out of scope for spike): OS keychain/DPAPI for key wrap, pe
 
 - No universal exclude-from-capture API across X11/Wayland compositors.
 - Wayland: compositor protocols / private surfaces vary (Mutter, KWin, wlroots).
-- Prototype `CaptureShield` is a **no-op** on Linux with documented hooks.
-- Still valuable: stdin mint + masked fill + handle-only agent protocol.
+- `CaptureShield` on Linux is an **honest UNAVAILABLE** stub (`supported=False`);
+  X11 `_NET_WM_STATE` / XShape do **not** equal capture exclude.
+- Production Linux/desktop hosts SHOULD use Electron
+  `BrowserWindow.setContentProtection(true)` on the **Dark Room window only**,
+  plus geometry redaction as defense-in-depth.
+- Still valuable without OS exclude: stdin mint + masked fill + handle-only protocol.
 
-Details and stub interface: [CAPTURE_NOTES.md](CAPTURE_NOTES.md).
+Details: [CAPTURE_NOTES.md](CAPTURE_NOTES.md), [examples/electron-host-sketch.md](examples/electron-host-sketch.md).
+
+**Product decision:** OS exclude of the **modal window only** (not global screenshot kill).
+Redaction remains defense-in-depth.
 
 ---
 
@@ -242,9 +249,10 @@ Details and stub interface: [CAPTURE_NOTES.md](CAPTURE_NOTES.md).
 | --- | --- |
 | Vault mint/resolve/revoke/list | `darkroom/vault.py` |
 | CLI | `darkroom/cli.py` |
-| CaptureShield stub | `darkroom/capture.py` |
+| CaptureShield (OS bindings) | `darkroom/capture.py` |
 | Draggable/resizable modal stub | `darkroom/modal_stub.py` |
 | Host redaction (geometry → blackout) | `darkroom/redact.py` |
+| Electron host sketch | `examples/electron-host-sketch.md` |
 | Agent narrative | `examples/agent_flow.md` |
 | Red-team protocol | `examples/red_team_protocol.md` |
 | Vault tests | `tests/test_vault.py` |
@@ -263,7 +271,7 @@ The Dark Room surface MUST:
 - Publish **geometry** `{x,y,w,h}` to a host-readable status file (prototype: `/tmp/darkroom-geometry.json`) on move/resize for redaction pipelines.
 - Expose **Mint handle** that calls the vault; show only `dr_sec_…` — never print plaintext to stdout or window titles.
 
-Production MUST additionally bind **CaptureShield** (OS exclude-from-capture). Linux hosts without a compositor shield MUST run **frame redaction** using published geometry before any model sees pixels.
+Production MUST bind **CaptureShield** / Electron `setContentProtection(true)` on the **Dark Room modal only** (not a global screenshot kill). Linux hosts without a real OS shield MUST run **frame redaction** using published geometry before any model sees pixels. Redaction remains defense-in-depth on all platforms.
 
 ## 12.2 Capture exclusion + residual risks
 
@@ -286,5 +294,6 @@ This is a **reference/prototype**. Report design issues via the repository issue
 
 ## 14. Changelog
 
+- **0.3.0** — Real OS-level CaptureShield (Win ctypes / macOS pyobjc optional / Linux honest stub); Electron host sketch; modal OS-exclude status line.
 - **0.2.0** — Modal stub (drag/resize), host redaction helper, attack suite + honest Linux capture notes.
 - **0.1.0** — Initial public reference SPEC + Python prototype.
