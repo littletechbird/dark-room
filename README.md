@@ -4,9 +4,9 @@
 
 Public reference proposal and working prototype from [@littletechbird](https://github.com/littletechbird).
 
-> **Status:** reference design + local prototype. **Not production security software.** Do not store real high-value secrets here without further hardening, review, and OS capture integration.
+> **Status:** reference design + local prototype. **Not production security software.** Design false-summit locked 2026-09-06 — ready for implementation plan after Brent GO. Do not store real high-value secrets here without further hardening, review, and OS capture integration.
 
-Full design: [SPEC.md](SPEC.md). One-page ask: [PROPOSAL.md](PROPOSAL.md). OS capture notes: [CAPTURE_NOTES.md](CAPTURE_NOTES.md).
+Product north star (document vault + sealed PDF viewer): [docs/FALSE_SUMMIT.md](docs/FALSE_SUMMIT.md). Older credential-fill RFC: [SPEC.md](SPEC.md). One-page ask: [PROPOSAL.md](PROPOSAL.md). OS capture notes: [CAPTURE_NOTES.md](CAPTURE_NOTES.md).
 
 ## Pitch
 
@@ -95,7 +95,8 @@ darkroom/          vault, CLI, CaptureShield, modal stub, redact
 attacks/           red-team suite + scorecard (run_all.py)
 examples/          agent flow + red_team_protocol + electron-host-sketch
 tests/             metadata secrecy, wrong handle, revoke
-SPEC.md            RFC-style design
+docs/              FALSE_SUMMIT.md — product north star (vault + sealed PDF viewer)
+SPEC.md            older credential-fill RFC (kept; not deleted)
 PROPOSAL.md        SendFeedback / Poteto-facing ask
 CAPTURE_NOTES.md   Win / macOS / Linux OS exclude (modal only) + redaction
 ```
