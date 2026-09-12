@@ -10,7 +10,7 @@
 - Host redaction of modal bounds: canary NOT_VISIBLE → PASS
 - Vault/handle/metadata/window title: no plaintext canary → PASS
 
-## Windows Spinkatron OS exclude
+## Windows desk PC OS exclude
 - `SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)` → setOk=True
 - GDI `CopyFromScreen` WITH exclude: lime canary pixels = 0
 - GDI control WITHOUT exclude: lime canary pixels = 1602

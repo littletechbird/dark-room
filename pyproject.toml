@@ -9,7 +9,7 @@ description = "Inverse sandbox for agent-watched desktops — opaque secret hand
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
-authors = [{ name = "Brent Spink" }]
+authors = [{ name = "@littletechbird" }]
 dependencies = [
   "cryptography>=42.0.0",
   "Pillow>=10.0.0",
