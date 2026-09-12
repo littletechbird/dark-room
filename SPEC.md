@@ -1,7 +1,7 @@
 # SPEC: Dark Room (RFC-style)
 
 **Title:** Dark Room — inverse sandbox for agent-watched desktops  
-**Author:** Brent Spink (@littletechbird)  
+**Author:** @littletechbird  
 **Status:** Draft / reference  
 **Intended audience:** Cursor / Grok Bot creators, desktop-agent runtime owners  
 **Companion:** working prototype in this repository (`darkroom/`)
